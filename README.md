@@ -163,4 +163,4 @@ before it leaves the page. Servers from v0.1.0 onward do this by default.
 
 ## License
 
-MIT or Apache-2.0, at your option.
+Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
