@@ -6,9 +6,16 @@
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jezza/iroh-lighthouse-ts"
+    "url": "git+https://github.com/Jezza/iroh-lighthouse-ts.git"
   },
-  "keywords": ["iroh", "p2p", "peer-discovery", "rendezvous", "browser", "ed25519"],
+  "keywords": [
+    "iroh",
+    "p2p",
+    "peer-discovery",
+    "rendezvous",
+    "browser",
+    "ed25519"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +25,13 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "src", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
