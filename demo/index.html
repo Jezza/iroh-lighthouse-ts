@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iroh-lighthouse · browser demo</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px;
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #0b0e14; color: #c7d2de;
+  }
+  h1 { font-size: 16px; margin: 0 0 4px; color: #e8eef7; }
+  p.sub { margin: 0 0 20px; color: #5a6478; font-size: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  label { display: block; font-size: 11px; color: #5a6478; margin-bottom: 3px; }
+  input {
+    background: #141a26; border: 1px solid #2d3d55; border-radius: 7px;
+    padding: 9px 10px; color: #e8eef7; font: inherit; min-width: 220px;
+  }
+  button {
+    background: #1d4ed8; border: 0; border-radius: 7px; color: #fff;
+    padding: 9px 16px; font: inherit; cursor: pointer;
+  }
+  button.ghost { background: #1a2333; }
+  button:disabled { opacity: .5; cursor: default; }
+  #status { margin: 14px 0; font-size: 12px; }
+  .ok { color: #4ade80; } .bad { color: #f87171; } .dim { color: #5a6478; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    background: #141a26; border-left: 3px solid #2f7d4f;
+    border-radius: 0 8px 8px 0; padding: 9px 11px; margin-bottom: 6px;
+    font-size: 12px; word-break: break-all;
+  }
+  li.me { border-left-color: #1d4ed8; }
+  .tag {
+    display: inline-block; background: #1a2333; border-radius: 4px;
+    padding: 1px 6px; font-size: 10px; color: #9fc6ff; margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+  <h1>iroh-lighthouse</h1>
+  <p class="sub">
+    Peer discovery from a static page. No backend, no build step — this file
+    and a lighthouse URL.
+  </p>
+
+  <div class="row">
+    <div>
+      <label for="url">lighthouse</label>
+      <input id="url" value="http://127.0.0.1:8099">
+    </div>
+    <div>
+      <label for="name">topic</label>
+      <input id="name" value="demo/room-1">
+    </div>
+    <div>
+      <label for="secret">secret</label>
+      <input id="secret" value="hunter2">
+    </div>
+    <div style="align-self: flex-end">
+      <button id="go">join</button>
+      <button id="stop" class="ghost" disabled>leave</button>
+    </div>
+  </div>
+
+  <div id="status" class="dim">idle</div>
+  <ul id="peers"></ul>
+
+<script type="module">
+import { Lighthouse, NodeKey, Topic, endpointAddr, join }
+  from "./dist/index.js";
+
+const $ = (id) => document.getElementById(id);
+const status = (text, cls = "dim") => {
+  $("status").className = cls;
+  $("status").textContent = text;
+};
+
+/* One identity per browser, kept across reloads so you stay the same peer.
+ * A real app would use the secret key from its iroh endpoint instead. */
+const STORE = "iroh-lighthouse-demo-key";
+let key;
+try {
+  const saved = localStorage.getItem(STORE);
+  key = saved ? NodeKey.fromHex(saved) : NodeKey.generate();
+  localStorage.setItem(STORE, key.toHex());
+} catch {
+  key = NodeKey.generate();   // private mode, or storage disabled
+}
+
+let session = null;
+
+function render(peers) {
+  const list = $("peers");
+  list.innerHTML = "";
+
+  const mine = document.createElement("li");
+  mine.className = "me";
+  mine.innerHTML = `${key.id}<span class="tag">you</span>`;
+  list.append(mine);
+
+  for (const peer of peers) {
+    const li = document.createElement("li");
+    const addrs = peer.addr.addrs.map((a) => a.Ip ?? a.Relay ?? "?").join(", ");
+    li.innerHTML =
+      `${peer.addr.id}<span class="tag">${peer.expires_in_secs}s</span>` +
+      (addrs ? `<br><span class="dim">${addrs}</span>` : "");
+    list.append(li);
+  }
+  status(`${peers.length} other${peers.length === 1 ? "" : "s"} on this topic`, "ok");
+}
+
+$("go").onclick = async () => {
+  $("go").disabled = true;
+  try {
+    status("joining…");
+    const lighthouse = new Lighthouse($("url").value.trim());
+    const topic = Topic.withSecret($("name").value.trim(), $("secret").value);
+
+    /* A browser tab has no dialable address of its own: it is a client, not a
+     * listening endpoint. Announcing an empty address list still registers
+     * your id on the topic, which is enough to see who else is here. Pair this
+     * with iroh-in-WASM to publish an address others can actually dial. */
+    session = await join(lighthouse, key, topic, endpointAddr(key.id), {
+      ttlSecs: 60,
+      pollIntervalMs: 3000,
+    });
+    session.onPeers(render);
+    $("stop").disabled = false;
+  } catch (err) {
+    status(`failed: ${err.message}`, "bad");
+    $("go").disabled = false;
+  }
+};
+
+$("stop").onclick = async () => {
+  $("stop").disabled = true;
+  try { await session?.leave(); } catch {}
+  session = null;
+  $("peers").innerHTML = "";
+  status("left", "dim");
+  $("go").disabled = false;
+};
+</script>
+</body>
+</html>

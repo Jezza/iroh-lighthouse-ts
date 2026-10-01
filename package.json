@@ -1,0 +1,43 @@
+{
+  "name": "iroh-lighthouse",
+  "version": "0.1.0",
+  "description": "Topic rendezvous and peer discovery for iroh, from the browser, with no backend of your own",
+  "type": "module",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jezza/iroh-lighthouse-ts"
+  },
+  "keywords": ["iroh", "p2p", "peer-discovery", "rendezvous", "browser", "ed25519"],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "bundle": "bun build src/index.ts --outfile demo/dist/index.js --format esm --target browser --minify",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test",
+    "test:live": "LIGHTHOUSE_URL=${LIGHTHOUSE_URL:-http://127.0.0.1:8099} bun test",
+    "demo": "bun run bundle && python3 -m http.server 8100",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
