@@ -8,7 +8,7 @@
  * Start a server first:
  *
  * ```sh
- * cargo run -p iroh-lighthouse-server -- \
+ * cargo run -p iroh-lighthouse -- \
  *     --http-listen 127.0.0.1:8099 --no-iroh --no-snapshot
  * ```
  *

@@ -1,11 +1,12 @@
 /**
  * Cross-implementation checks against the Rust vectors.
  *
- * `vectors.json` is produced by `cargo run -p iroh-lighthouse --example
- * vectors` and committed in both repos. Ed25519 is deterministic, so a correct
- * implementation reproduces every signature in it bit for bit — this is the
- * test that proves the TypeScript and Rust clients can actually talk to the
- * same server, rather than merely looking like they should.
+ * `vectors.json` is produced by
+ * `cargo run -p iroh-lighthouse-protocol --example vectors` and committed in
+ * both repos. Ed25519 is deterministic, so a correct implementation reproduces
+ * every signature in it bit for bit — this is the test that proves the
+ * TypeScript and Rust clients can actually talk to the same server, rather
+ * than merely looking like they should.
  */
 
 import { describe, expect, test } from "bun:test";
@@ -103,11 +104,11 @@ describe("payloads", () => {
   /**
    * Field order deliberately does NOT have to match Rust.
    *
-   * This is the property the protocol change bought us: the signature covers
-   * the payload string we send, so our own JSON.stringify order is fine. The
-   * Rust-generated payloads happen to use struct order; `vectors.json` lists
-   * the same body alphabetised. Both verify, because neither side re-encodes
-   * the other's body.
+   * This is what signing the payload as sent buys: the signature covers the
+   * string we send, so our own JSON.stringify order is fine. The Rust-generated
+   * payloads happen to use struct order; `vectors.json` lists the same body
+   * alphabetised. Both verify, because neither side re-encodes the other's
+   * body.
    */
   test("our encoding round-trips even when the key order differs", () => {
     const vector = (vectors.vectors as Record<string, Vector>).announce_topic_v4!;
